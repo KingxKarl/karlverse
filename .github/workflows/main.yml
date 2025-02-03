@@ -13,6 +13,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -31,7 +36,7 @@ jobs:
       - name: Deploy Backend to Azure
         uses: azure/webapps-deploy@v2
         with:
-          app-name: "karlverse-backend"  # Change to your backend Azure Web App name
+          app-name: "karlverse-backend"  # Change to your backend Web App name
           package: backend
 
   # 🔹 Deploy Frontend
@@ -41,6 +46,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -60,5 +70,5 @@ jobs:
       - name: Deploy Frontend to Azure
         uses: azure/webapps-deploy@v2
         with:
-          app-name: "karlverse"  # Change to your frontend Azure Web App name
+          app-name: "karlverse"  # Change to your frontend Web App name
           package: frontend/build
