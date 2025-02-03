@@ -19,7 +19,7 @@ function JobList() {
   const [sortOrder, setSortOrder] = useState("desc");
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/jobs")
+    fetch("https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/jobs")
       .then((res) => res.json())
       .then((data) => {
         // access the job object from the response
