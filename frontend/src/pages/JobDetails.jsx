@@ -24,7 +24,7 @@ function JobDetails() {
 
   // Fetch job details and update state
   const fetchJobDetails = () => {
-    fetch(`http://localhost:5000/api/jobs/${id}`)
+    fetch(`https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/jobs/${id}`)
       .then((res) => res.json())
       .then((data) => {
         // access the job object from the response
@@ -53,7 +53,7 @@ function JobDetails() {
 
   const handleStatusChange = async (newStatus) => {
     setStatus(newStatus);
-    await fetch(`http://localhost:5000/api/jobs/${id}/status`, {
+    await fetch(`https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/jobs/${id}/status`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: newStatus }),
@@ -71,7 +71,7 @@ function JobDetails() {
     const newNote = { text: notes, date: new Date().toLocaleString() };
     const updatedNotes = [...jobNotes, newNote];
 
-    await fetch(`http://localhost:5000/api/jobs/${id}/notes`, {
+    await fetch(`https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/jobs/${id}/notes`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ notes: updatedNotes }),
