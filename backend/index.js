@@ -7,8 +7,6 @@ import jobRoutes from "./routes/jobRoutes.js";
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Read environment variables from Azure
-
 app.use(cors({ 
     origin: "https://karlverse-bfdbcsbge7f5e6bh.eastus2-01.azurewebsites.net",
     methods: ["GET", "POST", "PATCH", "DELETE"],
