@@ -25,7 +25,7 @@ function Dashboard() {
 
   // 🔹 Fetch jobs & calculate metrics
   const fetchDashboardData = () => {
-    fetch("http://localhost:5000/api/jobs")
+    fetch("https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/jobs")
       .then((res) => res.json())
       .then((data) => {
         console.log("API Response:", data);
@@ -82,7 +82,7 @@ function Dashboard() {
     setIsAdding(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/jobs/scrape-job", {
+      const response = await fetch("https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/jobs/scrape-job", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jobUrl }),
