@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 import jobRoutes from "./routes/jobRoutes.js";
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 
 // Read environment variables from Azure
 
