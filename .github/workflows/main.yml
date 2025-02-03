@@ -71,4 +71,4 @@ jobs:
         uses: azure/webapps-deploy@v2
         with:
           app-name: "karlverse"  # Change to your frontend Web App name
-          package: frontend/dist
+          package: frontend/build
