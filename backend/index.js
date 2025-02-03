@@ -1,10 +1,14 @@
-import "dotenv/config";
+import "dotenv/config"; // Only needed for local development
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import jobRoutes from "./routes/jobRoutes.js";
 
 const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Read environment variables from Azure
+
 app.use(cors({ 
     origin: "https://karlverse-bfdbcsbge7f5e6bh.eastus2-01.azurewebsites.net",
     methods: ["GET", "POST", "PATCH", "DELETE"],
