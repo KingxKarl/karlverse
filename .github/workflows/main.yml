@@ -64,10 +64,11 @@ jobs:
       - name: Build Frontend
         run: |
           cd frontend
+          npm install
           npm run build
 
       - name: Deploy Frontend to Azure
         uses: azure/webapps-deploy@v2
         with:
           app-name: "karlverse"  # Change to your frontend Web App name
-          package: frontend/build
+          package: frontend/dist
