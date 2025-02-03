@@ -11,7 +11,7 @@ function JobLinkInput() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/scrape-job", {
+      const response = await fetch("https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/scrape-job", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jobUrl }),
