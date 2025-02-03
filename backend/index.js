@@ -5,7 +5,11 @@ import mongoose from "mongoose";
 import jobRoutes from "./routes/jobRoutes.js";
 
 const app = express();
-app.use(cors({ origin: "*" }));
+app.use(cors({ 
+    origin: "https://karlverse-bfdbcsbge7f5e6bh.eastus2-01.azurewebsites.net",
+    methods: ["GET", "POST", "PATCH", "DELETE"],
+    credentials: true
+}));
 app.use(express.json());
 
 const mongoURI = process.env.COSMOSDB_CONNECTION_STRING;
