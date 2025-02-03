@@ -52,6 +52,6 @@ app.get("/api/streak-goals", (req, res) => {
     res.json({ streak: applicationStreak, applicationsThisWeek: weeklyApplications, goal: weeklyGoal });
 });
 
-app.listen(5000, () => {
+app.listen(PORT, () => {
     console.log("Backend running on http://localhost:5000");
 });
