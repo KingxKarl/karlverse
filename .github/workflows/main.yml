@@ -26,7 +26,12 @@ jobs:
         run: |
           cd backend
           zip -r ../backend.zip .
-
+      
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          
       - name: Deploy Backend to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
