@@ -5,6 +5,8 @@ import OpenAI from "openai";
 import Job from "../models/Job.js";
 
 const router = express.Router();
+
+// Get openai api key from env variable
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Function to add follow-ups only on Tue/Wed/Thu
