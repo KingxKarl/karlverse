@@ -208,6 +208,18 @@ function JobDetails() {
           </div>
         )}
 
+        {/* 🔹 Skills */}
+        {job.skills?.length > 0 && (
+          <div className="mt-6">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Skills</h3>
+            <ul className="list-disc list-inside mt-2 text-gray-700 dark:text-gray-300">
+              {job.certifications.map((item, index) => (
+                <li key={index}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* 🔹 Job Description */}
         <details className="mt-6 bg-gray-200 dark:bg-gray-700 p-4 rounded-md">
           <summary className="text-xl font-semibold text-gray-900 dark:text-white cursor-pointer">
