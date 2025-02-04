@@ -11,6 +11,7 @@ const jobSchema = new mongoose.Schema({
     qualifications: [String],
     preferredQualifications: [String],
     certifications: [String],
+    skills: [String],
     aiSummary: String,
     status: { type: String, default: "Need to Apply" },
     dateAdded: { type: Date, default: Date.now },
