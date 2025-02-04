@@ -8,6 +8,7 @@ const router = express.Router();
 
 // Get openai api key from env variable
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+console.log("OpenAI API Key:", process.env.OPENAI_API_KEY ? "Loaded" : "MISSING");
 
 // Function to add follow-ups only on Tue/Wed/Thu
 const addFollowUpDate = (startDate, daysAhead) => {
