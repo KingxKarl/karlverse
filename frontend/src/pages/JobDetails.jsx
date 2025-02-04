@@ -1,8 +1,14 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  FaClipboardList, FaPaperPlane, FaComments, FaBriefcase,
-  FaGhost, FaTimes, FaCalendarAlt
+  FaClipboardList,
+  FaPaperPlane,
+  FaComments,
+  FaBriefcase,
+  FaGhost,
+  FaTimes,
+  FaCalendarAlt,
+  FaTrash
 } from "react-icons/fa";
 
 const STATUS_OPTIONS = {
@@ -81,6 +87,19 @@ function JobDetails() {
     setNotes(""); // Clear the note input after saving
   };
 
+  const handleDelete = async () => {
+    if (window.confirm("Are you sure you want to delete this job?")) {
+      try {
+        await fetch(`https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/jobs/${id}`, {
+          method: "DELETE",
+        });
+        navigate("/");
+      } catch (error) {
+        console.error("Error deleting job:", error.message);
+      }
+    }
+  };
+
   if (!job) return <p className="text-center text-gray-500">Loading job...</p>;
 
   return (
@@ -94,6 +113,13 @@ function JobDetails() {
             className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-highlight transition"
           >
             &larr; Back to Job List
+          </button>
+          <button
+            onClick={handleDelete}
+            className="text-red-500 hover:text-red-700 transition"
+            title="Delete Job"
+          >
+            <FaTrash size={20} />
           </button>
         </div>
 
@@ -136,18 +162,19 @@ function JobDetails() {
           <p><strong>Date Applied:</strong> {formatDate(job.dateApplied)}</p>
         </div>
 
-        {/* 🔹 Status Bar with Clickable Icons & Labels */}
+        {/* 🔹 Status Bar with Clickable Icons (labels hidden on mobile) */}
         <div className="flex justify-between items-center mt-4 p-4 bg-gray-200 dark:bg-gray-700 rounded-md">
           {Object.entries(STATUS_OPTIONS).map(([statusKey, { color, icon, label }]) => (
             <div key={statusKey} className="flex flex-col items-center">
               <button
                 onClick={() => handleStatusChange(statusKey)}
-                className={`p-2 rounded-full text-white transition-all ${status === statusKey ? color + " scale-110" : "bg-gray-400 hover:scale-110"
-                  }`}
+                className={`p-2 rounded-full text-white transition-all ${
+                  status === statusKey ? color + " scale-110" : "bg-gray-400 hover:scale-110"
+                }`}
               >
                 {icon}
               </button>
-              <span className="text-xs mt-1 text-gray-700 dark:text-gray-300">{label}</span>
+              <span className="text-xs mt-1 text-gray-700 dark:text-gray-300 hidden md:block">{label}</span>
             </div>
           ))}
         </div>
@@ -213,7 +240,7 @@ function JobDetails() {
           <div className="mt-6">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Skills</h3>
             <ul className="list-disc list-inside mt-2 text-gray-700 dark:text-gray-300">
-              {job.certifications.map((item, index) => (
+              {job.skills.map((item, index) => (
                 <li key={index}>{item}</li>
               ))}
             </ul>
