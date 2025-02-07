@@ -1,51 +1,49 @@
-import "dotenv/config"; // Load environment variables for local development
+import "dotenv/config"; // Load environment variables
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
-import session from "express-session";
+import cookieParser from "cookie-parser";
 import jobRoutes from "./routes/jobRoutes.js";
 import authRoutes from "./routes/auth.js";
-import passport from "./passportConfig.js";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
+// Optional middleware to enforce HTTPS in production
+function requireHTTPS(req, res, next) {
+  if (
+    process.env.NODE_ENV === "production" &&
+    req.headers["x-forwarded-proto"] !== "https"
+  ) {
+    return res.redirect("https://" + req.headers.host + req.url);
+  }
+  next();
+}
+app.use(requireHTTPS);
+
 // Configure CORS (adjust origin as needed)
 app.use(
   cors({
-    origin: "https://karlverse-bfdbcsbge7f5e6bh.eastus2-01.azurewebsites.net",
+    origin: process.env.FRONTEND_URL || "https://your-production-frontend.example.com",
     methods: ["GET", "POST", "PATCH", "DELETE"],
     credentials: true
   })
 );
 
-// Parse JSON bodies
+// Parse JSON bodies and cookies
 app.use(express.json());
+app.use(cookieParser());
 
-// Connect to CosmosDB using the connection string from environment variables
+// Connect to CosmosDB
 mongoose
   .connect(process.env.COSMOSDB_CONNECTION_STRING)
   .then(() => console.log("Connected to CosmosDB"))
   .catch((err) => console.error("CosmosDB Connection Error:", err));
 
-// Configure session middleware (in production, use a persistent session store)
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "your-secret-key",
-    resave: false,
-    saveUninitialized: false,
-    cookie: { secure: process.env.NODE_ENV === "production" }
-  })
-);
-
-// Initialize Passport and enable persistent login sessions
-app.use(passport.initialize());
-app.use(passport.session());
-
-// Mount authentication routes
+// Mount authentication routes (for registration and login)
 app.use("/auth", authRoutes);
 
-// Mount job-related routes
+// Mount job routes (all require JWT authentication)
 app.use("/api/jobs", jobRoutes);
 
 // Function to update application streak
