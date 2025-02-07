@@ -10,7 +10,7 @@ const router = express.Router();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 console.log("OpenAI API Key:", process.env.OPENAI_API_KEY ? "Loaded" : "MISSING");
 
-// Helper function to add follow-up dates (same as before)
+// Helper function to add follow-up dates only on Tue/Wed/Thu
 const addFollowUpDate = (startDate, daysAhead) => {
   let date = new Date(startDate);
   date.setDate(date.getDate() + daysAhead);
@@ -20,28 +20,25 @@ const addFollowUpDate = (startDate, daysAhead) => {
   return date.toISOString();
 };
 
-/** POST /scrape-job
- *  Scrapes a job posting, extracts data via the AI, and saves a new job.
- *  Only an authenticated user can add a job.
+/**
+ * POST /api/jobs/scrape-job
+ * Scrapes a job posting, extracts details via AI, and saves a new job.
+ * Requires authentication.
  */
 router.post("/scrape-job", ensureAuthenticated, async (req, res) => {
   const { jobUrl } = req.body;
   console.log("Received job URL:", jobUrl);
   try {
-    const { data } = await axios.get(jobUrl, {
-      headers: { "User-Agent": "Mozilla/5.0" }
-    });
+    const { data } = await axios.get(jobUrl, { headers: { "User-Agent": "Mozilla/5.0" } });
     const $ = cheerio.load(data);
     const rawText = $("body").text().replace(/\s+/g, " ").trim();
 
-    // Get structured job details from the AI model
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content:
-            "You are an AI that extracts job postings and returns structured data. Always return a valid JSON object."
+          content: "You are an AI that extracts job postings and returns structured data. Always return a valid JSON object."
         },
         {
           role: "user",
@@ -60,7 +57,6 @@ VERY IMPORTANT: ONLY return valid JSON.`
     if (aiContent.startsWith("```json")) {
       aiContent = aiContent.replace(/^```json/, "").replace(/```$/, "").trim();
     }
-
     let extractedData;
     try {
       extractedData = JSON.parse(aiContent);
@@ -69,9 +65,8 @@ VERY IMPORTANT: ONLY return valid JSON.`
       return res.status(500).json({ error: "Failed to process AI-generated job details." });
     }
 
-    // Create a new Job with the current user as the owner.
     const newJob = new Job({
-      user: req.user._id,
+      user: req.user.id,
       jobUrl,
       ...extractedData
     });
@@ -85,8 +80,9 @@ VERY IMPORTANT: ONLY return valid JSON.`
   }
 });
 
-/** GET /api/jobs
- *  Returns jobs for the authenticated user; admins get all jobs.
+/**
+ * GET /api/jobs
+ * Returns jobs for the authenticated user; admins receive all jobs.
  */
 router.get("/", ensureAuthenticated, async (req, res) => {
   try {
@@ -94,7 +90,7 @@ router.get("/", ensureAuthenticated, async (req, res) => {
     if (req.user.role === "admin") {
       jobs = await Job.find();
     } else {
-      jobs = await Job.find({ user: req.user._id });
+      jobs = await Job.find({ user: req.user.id });
     }
     res.json({ success: true, count: jobs.length, jobs });
   } catch (error) {
@@ -103,15 +99,17 @@ router.get("/", ensureAuthenticated, async (req, res) => {
   }
 });
 
-/** GET /api/jobs/:id
- *  Returns a single job if the user is its owner (or admin).
+/**
+ * GET /api/jobs/:id
+ * Returns a single job if it belongs to the authenticated user.
  */
 router.get("/:id", ensureAuthenticated, ensureJobOwner, async (req, res) => {
   res.json({ success: true, job: req.job });
 });
 
-/** DELETE /api/jobs/:id
- *  Deletes a job if the user owns it (or is admin).
+/**
+ * DELETE /api/jobs/:id
+ * Deletes a job if it belongs to the authenticated user.
  */
 router.delete("/:id", ensureAuthenticated, ensureJobOwner, async (req, res) => {
   try {
@@ -123,8 +121,9 @@ router.delete("/:id", ensureAuthenticated, ensureJobOwner, async (req, res) => {
   }
 });
 
-/** PATCH /api/jobs/:id/status
- *  Updates job status (and schedules follow-ups if needed) for an owned job.
+/**
+ * PATCH /api/jobs/:id/status
+ * Updates job status (and schedules follow-ups if needed).
  */
 router.patch("/:id/status", ensureAuthenticated, ensureJobOwner, async (req, res) => {
   const { status } = req.body;
@@ -148,8 +147,9 @@ router.patch("/:id/status", ensureAuthenticated, ensureJobOwner, async (req, res
   }
 });
 
-/** PATCH /api/jobs/:id/notes
- *  Updates job notes for an owned job.
+/**
+ * PATCH /api/jobs/:id/notes
+ * Updates job notes.
  */
 router.patch("/:id/notes", ensureAuthenticated, ensureJobOwner, async (req, res) => {
   const { notes } = req.body;
