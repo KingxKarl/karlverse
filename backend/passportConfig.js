@@ -2,12 +2,12 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import User from "./models/User.js";
 
-// Serialize the user by storing the user id in the session
+// Serialize user into the session by storing the user ID.
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
 
-// Deserialize the user from the session using the stored id
+// Deserialize user from the session by retrieving from DB.
 passport.deserializeUser(async (id, done) => {
   try {
     const user = await User.findById(id);
@@ -17,11 +17,10 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
-// Local Strategy: authenticate users by email and password
+// Local Strategy for email/password authentication.
 passport.use(
   new LocalStrategy({ usernameField: "email" }, async (email, password, done) => {
     try {
-      // Normalize the email for consistency
       const user = await User.findOne({ email: email.toLowerCase() });
       if (!user) {
         return done(null, false, { message: "Incorrect email or password." });
