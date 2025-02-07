@@ -13,7 +13,7 @@ function AddJobManual() {
     certifications: "",
     aiSummary: "",
     status: "Need to Apply",
-    jobUrl: "",
+    jobUrl: ""
   });
 
   const [loading, setLoading] = useState(false);
@@ -27,7 +27,7 @@ function AddJobManual() {
     e.preventDefault();
     setLoading(true);
 
-    // Format responsibilities, qualifications, etc. as arrays
+    // Format fields that are expected to be arrays
     const formattedData = {
       ...jobData,
       responsibilities: jobData.responsibilities
@@ -42,14 +42,14 @@ function AddJobManual() {
       certifications: jobData.certifications
         ? jobData.certifications.split("\n").map((line) => line.trim())
         : [],
-      dateAdded: new Date().toISOString(),
+      dateAdded: new Date().toISOString()
     };
 
     try {
       const response = await fetch("https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formattedData),
+        body: JSON.stringify(formattedData)
       });
 
       if (!response.ok) {
@@ -67,9 +67,7 @@ function AddJobManual() {
     <div className="min-h-screen bg-backgroundLight dark:bg-backgroundDark p-8 pt-20 transition-all">
       <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 shadow-md rounded-md p-6">
         <h1 className="text-2xl font-bold text-primary dark:text-highlight">Manually Add Job</h1>
-        
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          {/* Job Title */}
           <div>
             <label className="block text-gray-700 dark:text-gray-300">Job Title</label>
             <input
@@ -81,8 +79,6 @@ function AddJobManual() {
               className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white"
             />
           </div>
-
-          {/* Company Name */}
           <div>
             <label className="block text-gray-700 dark:text-gray-300">Company Name</label>
             <input
@@ -94,8 +90,6 @@ function AddJobManual() {
               className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white"
             />
           </div>
-
-          {/* Job Description */}
           <div>
             <label className="block text-gray-700 dark:text-gray-300">Job Description</label>
             <textarea
@@ -107,8 +101,6 @@ function AddJobManual() {
               className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white"
             ></textarea>
           </div>
-
-          {/* Responsibilities */}
           <div>
             <label className="block text-gray-700 dark:text-gray-300">Responsibilities (one per line)</label>
             <textarea
@@ -119,8 +111,6 @@ function AddJobManual() {
               className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white"
             ></textarea>
           </div>
-
-          {/* Qualifications */}
           <div>
             <label className="block text-gray-700 dark:text-gray-300">Qualifications (one per line)</label>
             <textarea
@@ -131,8 +121,6 @@ function AddJobManual() {
               className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white"
             ></textarea>
           </div>
-
-          {/* Preferred Qualifications */}
           <div>
             <label className="block text-gray-700 dark:text-gray-300">Preferred Qualifications (one per line)</label>
             <textarea
@@ -143,8 +131,6 @@ function AddJobManual() {
               className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white"
             ></textarea>
           </div>
-
-          {/* Certifications */}
           <div>
             <label className="block text-gray-700 dark:text-gray-300">Certifications (one per line)</label>
             <textarea
@@ -155,8 +141,6 @@ function AddJobManual() {
               className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white"
             ></textarea>
           </div>
-
-          {/* AI-Generated Summary */}
           <div>
             <label className="block text-gray-700 dark:text-gray-300">AI-Generated Summary (Optional)</label>
             <textarea
@@ -167,8 +151,6 @@ function AddJobManual() {
               className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white"
             ></textarea>
           </div>
-
-          {/* Job Status */}
           <div>
             <label className="block text-gray-700 dark:text-gray-300">Job Status</label>
             <select
@@ -185,8 +167,6 @@ function AddJobManual() {
               <option value="Not Moving Forward">Not Moving Forward</option>
             </select>
           </div>
-
-          {/* Job Posting URL */}
           <div>
             <label className="block text-gray-700 dark:text-gray-300">Job Posting URL (Optional)</label>
             <input
@@ -197,8 +177,6 @@ function AddJobManual() {
               className="w-full p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white"
             />
           </div>
-
-          {/* Submit Button */}
           <button
             type="submit"
             className="w-full p-2 bg-primary text-white rounded-md hover:bg-primaryHover transition"
