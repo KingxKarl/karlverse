@@ -1,13 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { 
-  FaClipboardList, 
-  FaPaperPlane, 
-  FaComments, 
-  FaBriefcase, 
-  FaGhost, 
-  FaTimes 
-} from "react-icons/fa";
+import { FaClipboardList, FaPaperPlane, FaComments, FaBriefcase, FaGhost, FaTimes } from "react-icons/fa";
 
 const STATUS_OPTIONS = {
   "Need to Apply": { color: "bg-red-500", icon: <FaClipboardList /> },
@@ -15,7 +8,7 @@ const STATUS_OPTIONS = {
   "Interviewing": { color: "bg-blue-500", icon: <FaComments /> },
   "Job Offer": { color: "bg-green-500", icon: <FaBriefcase /> },
   "Ghosted": { color: "bg-gray-500", icon: <FaGhost /> },
-  "Not Moving Forward": { color: "bg-black", icon: <FaTimes /> },
+  "Not Moving Forward": { color: "bg-black", icon: <FaTimes /> }
 };
 
 function JobList() {
@@ -29,19 +22,16 @@ function JobList() {
     fetch("https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/jobs")
       .then((res) => res.json())
       .then((data) => {
-        // Set the jobs array from the response (assuming each job includes _id)
         setJobs(data.jobs);
       });
   }, []);
 
-  // Filter jobs based on search term
   const filteredJobs = jobs.filter(
     (job) =>
       job.jobTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
       job.companyName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Sort the jobs
   const sortedJobs = [...filteredJobs].sort((a, b) => {
     if (sortField === "dateAdded") {
       return sortOrder === "asc"
@@ -70,8 +60,6 @@ function JobList() {
   return (
     <div className="min-h-screen bg-backgroundLight dark:bg-backgroundDark p-8 pt-20 transition-all">
       <div className="max-w-6xl mx-auto bg-white dark:bg-gray-800 shadow-md rounded-md p-6">
-        
-        {/* Header with Search & Sort */}
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold text-primary dark:text-highlight">Job List</h1>
           <button
@@ -81,8 +69,6 @@ function JobList() {
             Switch to {viewMode === "detailed" ? "List View" : "Detailed View"}
           </button>
         </div>
-
-        {/* Search & Sort Options */}
         <div className="flex flex-wrap gap-4 mb-4">
           <input
             type="text"
@@ -110,13 +96,9 @@ function JobList() {
             {sortOrder === "asc" ? "▲ Ascending" : "▼ Descending"}
           </button>
         </div>
-
-        {/* Job Display */}
         {viewMode === "detailed" ? (
           sortedJobs.map((job) => (
             <div key={job._id} className="p-4 border-b dark:border-gray-700">
-              
-              {/* Job Title & Status */}
               <div className="flex justify-between items-center">
                 <Link to={`/jobs/${job._id}`} className="text-lg font-semibold text-blue-500 hover:underline">
                   {job.jobTitle}
@@ -125,19 +107,14 @@ function JobList() {
                   {job.status}
                 </div>
               </div>
-
-              {/* Job Details */}
               <div className="mt-2 text-gray-700 dark:text-gray-300">
                 <p><strong>Company:</strong> {job.companyName}</p>
                 <p>
-                  <strong>Date Applied:</strong>{" "}
-                  {job.dateApplied ? new Date(job.dateApplied).toLocaleDateString("en-US") : "N/A"}
+                  <strong>Date Applied:</strong> {job.dateApplied ? new Date(job.dateApplied).toLocaleDateString("en-US") : "N/A"}
                 </p>
                 <p><strong>Salary:</strong> {job.salary}</p>
                 <p><strong>AI Summary:</strong> {job.aiSummary}</p>
               </div>
-
-              {/* Status Progress Icons (Labels hidden on mobile) */}
               <div className="flex items-center mt-4 space-x-4">
                 {Object.entries(STATUS_OPTIONS).map(([statusKey, { color, icon }]) => (
                   <div key={statusKey} className="flex items-center">
