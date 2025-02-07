@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-// Define the Job schema with a reference to the user owner.
+// Define Job schema with a reference to the owning user.
 const jobSchema = new mongoose.Schema({
   user: { 
     type: mongoose.Schema.Types.ObjectId, 
