@@ -17,7 +17,7 @@ const STATUS_OPTIONS = {
   "Interviewing": { color: "bg-blue-500", icon: <FaComments />, label: "Interviewing" },
   "Job Offer": { color: "bg-green-500", icon: <FaBriefcase />, label: "Job Offer" },
   "Ghosted": { color: "bg-gray-500", icon: <FaGhost />, label: "Ghosted" },
-  "Not Moving Forward": { color: "bg-black", icon: <FaTimes />, label: "Not Moving Forward" },
+  "Not Moving Forward": { color: "bg-black", icon: <FaTimes />, label: "Not Moving Forward" }
 };
 
 function JobDetails() {
@@ -28,12 +28,10 @@ function JobDetails() {
   const [notes, setNotes] = useState("");
   const [jobNotes, setJobNotes] = useState([]);
 
-  // Fetch job details and update state
   const fetchJobDetails = () => {
     fetch(`https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/jobs/${id}`)
       .then((res) => res.json())
       .then((data) => {
-        // access the job object from the response
         setJob(data.job);
         setStatus(data.job.status);
         setJobNotes(data.job.notes || []);
@@ -62,9 +60,9 @@ function JobDetails() {
     await fetch(`https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/jobs/${id}/status`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: newStatus }),
+      body: JSON.stringify({ status: newStatus })
     });
-    fetchJobDetails(); // Refresh job details after status change
+    fetchJobDetails();
   };
 
   const handleNoteChange = (e) => {
@@ -73,25 +71,22 @@ function JobDetails() {
 
   const saveNote = async () => {
     if (!notes.trim()) return;
-
     const newNote = { text: notes, date: new Date().toLocaleString() };
     const updatedNotes = [...jobNotes, newNote];
-
     await fetch(`https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/jobs/${id}/notes`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ notes: updatedNotes }),
+      body: JSON.stringify({ notes: updatedNotes })
     });
-
     setJobNotes(updatedNotes);
-    setNotes(""); // Clear the note input after saving
+    setNotes("");
   };
 
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this job?")) {
       try {
         await fetch(`https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/jobs/${id}`, {
-          method: "DELETE",
+          method: "DELETE"
         });
         navigate("/");
       } catch (error) {
@@ -105,8 +100,6 @@ function JobDetails() {
   return (
     <div className="min-h-screen bg-backgroundLight dark:bg-backgroundDark p-8 pt-20 transition-all">
       <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 shadow-md rounded-md p-6">
-
-        {/* 🔹 Header */}
         <div className="flex justify-between items-center mb-4">
           <button
             onClick={() => navigate(-1)}
@@ -122,13 +115,9 @@ function JobDetails() {
             <FaTrash size={20} />
           </button>
         </div>
-
-        {/* 🔹 Job Title & Company */}
         <h1 className="text-2xl font-bold text-primary dark:text-highlight">{job.jobTitle}</h1>
         <h2 className="text-lg text-gray-700 dark:text-gray-300 mb-4">{job.companyName}</h2>
         <h2 className="text-lg text-gray-700 dark:text-gray-300 mb-4">{job.salary}</h2>
-
-        {/* 🔹 Follow-Up Dates Section (Auto-Updates) */}
         {job.followUpDates && Object.keys(job.followUpDates).length > 0 && (
           <div className="mt-6 bg-gray-200 dark:bg-gray-700 p-4 rounded-md">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
@@ -143,8 +132,6 @@ function JobDetails() {
             </ul>
           </div>
         )}
-
-        {/* 🔹 Job Posting Link */}
         <div className="mt-4">
           <a
             href={job.jobUrl}
@@ -155,21 +142,17 @@ function JobDetails() {
             View Original Job Posting
           </a>
         </div>
-
-        {/* 🔹 Dates Section */}
         <div className="mt-4 text-gray-700 dark:text-gray-300">
           <p><strong>Date Added:</strong> {formatDate(job.dateAdded)}</p>
           <p><strong>Date Applied:</strong> {formatDate(job.dateApplied)}</p>
         </div>
-
-        {/* 🔹 Status Bar with Clickable Icons (labels hidden on mobile) */}
         <div className="flex justify-between items-center mt-4 p-4 bg-gray-200 dark:bg-gray-700 rounded-md">
           {Object.entries(STATUS_OPTIONS).map(([statusKey, { color, icon, label }]) => (
             <div key={statusKey} className="flex flex-col items-center">
               <button
                 onClick={() => handleStatusChange(statusKey)}
                 className={`p-2 rounded-full text-white transition-all ${
-                  status === statusKey ? color + " scale-110" : "bg-gray-400 hover:scale-110"
+                  job.status === statusKey ? color + " scale-110" : "bg-gray-400 hover:scale-110"
                 }`}
               >
                 {icon}
@@ -178,16 +161,12 @@ function JobDetails() {
             </div>
           ))}
         </div>
-
-        {/* 🔹 AI Summary */}
         {job.aiSummary && (
           <div className="mt-6">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">AI-Generated Summary</h3>
             <p className="text-gray-700 dark:text-gray-300 mt-2">{job.aiSummary}</p>
           </div>
         )}
-
-        {/* 🔹 Responsibilities */}
         {job.responsibilities?.length > 0 && (
           <div className="mt-6">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Responsibilities</h3>
@@ -198,8 +177,6 @@ function JobDetails() {
             </ul>
           </div>
         )}
-
-        {/* 🔹 Qualifications */}
         {job.qualifications?.length > 0 && (
           <div className="mt-6">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Qualifications</h3>
@@ -210,8 +187,6 @@ function JobDetails() {
             </ul>
           </div>
         )}
-
-        {/* 🔹 Preferred Qualifications */}
         {job.preferredQualifications?.length > 0 && (
           <div className="mt-6">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Preferred Qualifications</h3>
@@ -222,8 +197,6 @@ function JobDetails() {
             </ul>
           </div>
         )}
-
-        {/* 🔹 Certifications */}
         {job.certifications?.length > 0 && (
           <div className="mt-6">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Certifications</h3>
@@ -234,8 +207,6 @@ function JobDetails() {
             </ul>
           </div>
         )}
-
-        {/* 🔹 Skills */}
         {job.skills?.length > 0 && (
           <div className="mt-6">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Skills</h3>
@@ -246,8 +217,6 @@ function JobDetails() {
             </ul>
           </div>
         )}
-
-        {/* 🔹 Job Description */}
         <details className="mt-6 bg-gray-200 dark:bg-gray-700 p-4 rounded-md">
           <summary className="text-xl font-semibold text-gray-900 dark:text-white cursor-pointer">
             Job Overview
@@ -256,8 +225,6 @@ function JobDetails() {
             <p>{job.description}</p>
           </div>
         </details>
-
-        {/* 🔹 Notes Section */}
         <div className="mt-6">
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Job Notes</h3>
           <textarea
@@ -283,7 +250,6 @@ function JobDetails() {
             </ul>
           )}
         </div>
-
       </div>
     </div>
   );
