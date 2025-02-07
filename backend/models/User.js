@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 
-// Define the User schema
+// Define User schema
 const userSchema = new mongoose.Schema(
   {
     email: {
@@ -12,9 +12,9 @@ const userSchema = new mongoose.Schema(
       trim: true
     },
     password: {
-      type: String // Only used for local authentication
+      type: String // Used for local authentication
     },
-    googleId: String, // For OAuth strategies if needed later
+    googleId: String, // For future OAuth providers
     name: {
       type: String,
       trim: true
@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Hash password before saving if modified/new
+// Pre-save hook: hash the password if it is new or modified
 userSchema.pre("save", async function (next) {
   if (this.isModified("password") && this.password) {
     const saltRounds = 12;
@@ -37,7 +37,7 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-// Instance method for comparing passwords
+// Instance method to compare a given password with the stored hash
 userSchema.methods.comparePassword = async function (candidatePassword) {
   if (!this.password) return false;
   return bcrypt.compare(candidatePassword, this.password);
