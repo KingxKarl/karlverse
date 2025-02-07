@@ -19,7 +19,6 @@ function App() {
   return (
     <div>
       <h1>Job Tracking App</h1>
-
       <form onSubmit={handleSubmit}>
         <input 
           type="text" 
@@ -35,10 +34,11 @@ function App() {
         />
         <button type="submit">Add Job</button>
       </form>
-
       <ul>
         {jobs.map((job) => (
-          <li key={job.id}>{job.company} - {job.role} ({job.status})</li>
+          <li key={job.id}>
+            {job.company} - {job.role} ({job.status})
+          </li>
         ))}
       </ul>
     </div>
