@@ -1,8 +1,20 @@
 import express from "express";
-import passport from "passport";
+import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
 const router = express.Router();
+
+// Helper function to create a JWT token for a user
+const createToken = (user) => {
+  const payload = {
+    id: user._id,
+    email: user.email,
+    name: user.name,
+    role: user.role
+  };
+  // Token expires in 1 day; adjust as needed.
+  return jwt.sign(payload, process.env.JWT_SECRET || "your_jwt_secret", { expiresIn: "1d" });
+};
 
 /**
  * @route   POST /auth/register
@@ -18,47 +30,44 @@ router.post("/register", async (req, res) => {
     }
     const user = new User({ email, password, name });
     await user.save();
+    const token = createToken(user);
     res.status(201).json({
       message: "User registered successfully.",
-      user: { id: user._id, email: user.email, name: user.name }
+      token,
+      user: { id: user._id, email: user.email, name: user.name, role: user.role }
     });
   } catch (err) {
-    console.error("Error registering user:", err);
+    console.error("Registration error:", err);
     res.status(500).json({ message: "Server error during registration." });
   }
 });
 
 /**
  * @route   POST /auth/login
- * @desc    Log in using local strategy
+ * @desc    Log in a user and return a JWT token
  * @access  Public
  */
-router.post("/login", (req, res, next) => {
-  passport.authenticate("local", (err, user, info) => {
-    if (err) return next(err);
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      return res.status(401).json({ message: info.message || "Login failed" });
+      return res.status(401).json({ message: "Invalid email or password." });
     }
-    req.logIn(user, (err) => {
-      if (err) return next(err);
-      const { _id, email, name, role } = user;
-      return res.json({
-        message: "Logged in successfully.",
-        user: { id: _id, email, name, role }
-      });
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid email or password." });
+    }
+    const token = createToken(user);
+    res.json({
+      message: "Logged in successfully.",
+      token,
+      user: { id: user._id, email: user.email, name: user.name, role: user.role }
     });
-  })(req, res, next);
-});
-
-/**
- * @route   GET /auth/logout
- * @desc    Log out the current user
- * @access  Public
- */
-router.get("/logout", (req, res) => {
-  req.logout(() => {
-    res.json({ message: "Logged out successfully." });
-  });
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ message: "Server error during login." });
+  }
 });
 
 export default router;
