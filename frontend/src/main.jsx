@@ -7,6 +7,7 @@ import JobList from "./pages/JobList";
 import JobDetails from "./pages/JobDetails";
 import AddJobManual from "./pages/AddJobManual";
 import JobLinkInput from "./pages/JobLinkInput";
+import Login from "./pages/Login"; // Import the new Login page
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -20,6 +21,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route path="/jobs/:id" element={<JobDetails />} />
           <Route path="/add-job-link" element={<JobLinkInput />} />
           <Route path="/add-job" element={<AddJobManual />} />
+          <Route path="/login" element={<Login />} />
         </Routes>
       </div>
     </Router>
