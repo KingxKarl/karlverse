@@ -10,6 +10,8 @@ import {
   FaCalendarAlt,
   FaTrash
 } from "react-icons/fa";
+import API_URL from "../config";
+import { useAuth } from "../context/AuthContext";
 
 const STATUS_OPTIONS = {
   "Need to Apply": { color: "bg-red-500", icon: <FaClipboardList />, label: "Need to Apply" },
@@ -28,20 +30,39 @@ function JobDetails() {
   const [notes, setNotes] = useState("");
   const [jobNotes, setJobNotes] = useState([]);
 
-  const fetchJobDetails = () => {
-    fetch(`https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/jobs/${id}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setJob(data.job);
-        setStatus(data.job.status);
-        setJobNotes(data.job.notes || []);
-      })
-      .catch(() => navigate("/"));
+  const { auth } = useAuth();
+
+  const fetchJobDetails = async () => {
+    try {
+      // Ensure a token is available
+      const token = auth.token;
+      if (!token) {
+        throw new Error("No auth token available.");
+      }
+      // Make a fetch request with the Authorization header
+      const response = await fetch(`${API_URL}/jobs/${id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,  // Include the token here
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+      setJob(data.job);
+      setStatus(data.job.status);
+      setJobNotes(data.job.notes || []);
+    } catch (error) {
+      console.error("Error fetching job details:", error);
+      navigate("/");
+    }
   };
 
   useEffect(() => {
     fetchJobDetails();
-  }, [id, navigate]);
+  }, [id, auth, navigate]);
 
   const formatDate = (isoDate) => {
     if (!isoDate) return "N/A";
@@ -57,36 +78,64 @@ function JobDetails() {
 
   const handleStatusChange = async (newStatus) => {
     setStatus(newStatus);
-    await fetch(`https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/jobs/${id}/status`, {
+    // Retrieve the token from your auth context
+    const token = auth.token;
+    if (!token) {
+      console.error("No auth token available.");
+      return;
+    }
+    // Include the Authorization header in the PATCH request
+    await fetch(`${API_URL}/jobs/${id}/status`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}` // Added auth header
+      },
       body: JSON.stringify({ status: newStatus })
     });
     fetchJobDetails();
   };
-
+  
   const handleNoteChange = (e) => {
     setNotes(e.target.value);
   };
 
   const saveNote = async () => {
     if (!notes.trim()) return;
+    const token = auth.token;
+    if (!token) {
+      console.error("No auth token available.");
+      return;
+    }
     const newNote = { text: notes, date: new Date().toLocaleString() };
     const updatedNotes = [...jobNotes, newNote];
-    await fetch(`https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/jobs/${id}/notes`, {
+    await fetch(`${API_URL}/jobs/${id}/notes`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}` // Added auth header
+      },
       body: JSON.stringify({ notes: updatedNotes })
     });
     setJobNotes(updatedNotes);
     setNotes("");
-  };
+  };  
 
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this job?")) {
       try {
-        await fetch(`https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/jobs/${id}`, {
-          method: "DELETE"
+        // Retrieve the token from the auth context
+        const token = auth.token;
+        if (!token) {
+          throw new Error("No auth token available; cannot delete job.");
+        }
+        // Include the Authorization header in the DELETE request
+        await fetch(`${API_URL}/jobs/${id}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
         });
         navigate("/");
       } catch (error) {
@@ -94,6 +143,7 @@ function JobDetails() {
       }
     }
   };
+  
 
   if (!job) return <p className="text-center text-gray-500">Loading job...</p>;
 
