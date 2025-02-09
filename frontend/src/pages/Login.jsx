@@ -1,54 +1,61 @@
-import React, { useState, useContext } from "react";
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../AuthContext";
 
-function Login() {
-  const { login } = useContext(AuthContext);
+const Login = () => {
+  const { login } = useAuth();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ email: "", password: "" });
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = await login(formData.email, formData.password);
+    const result = await login(email, password); // Capture the login result
     if (result.success) {
+      // On success, redirect the user to the dashboard/homepage ("/")
       navigate("/");
     } else {
-      setError(result.message);
+      // Optionally, you can handle login errors here (e.g., display an error message)
+      console.error("Login failed:", result.message);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-backgroundLight dark:bg-backgroundDark">
-      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-6 rounded shadow-md">
-        <h2 className="text-xl font-bold mb-4 text-primary dark:text-highlight">Login</h2>
-        {error && <p className="text-red-500">{error}</p>}
-        <div className="mb-4">
-          <label className="block mb-1">Email</label>
+    <div className="flex justify-center items-center h-screen bg-gray-100">
+      <div className="bg-card p-6 rounded-lg shadow-md w-full max-w-md">
+        <h2 className="text-center text-2xl font-bold text-primary">Welcome Back</h2>
+        <p className="text-center text-gray-600 mb-4">Log in to continue</p>
+
+        <button className="w-full bg-blue-500 text-white py-2 rounded-md mb-4">
+          Continue with Google
+        </button>
+
+        <div className="border-b my-4"></div>
+
+        <form onSubmit={handleSubmit}>
           <input
             type="email"
-            className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            required
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-3 py-2 border rounded-md mb-3"
           />
-        </div>
-        <div className="mb-4">
-          <label className="block mb-1">Password</label>
           <input
             type="password"
-            className="w-full p-2 border rounded dark:bg-gray-700 dark:text-white"
-            value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            required
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-3 py-2 border rounded-md mb-4"
           />
-        </div>
-        <button type="submit" className="w-full bg-primary text-white p-2 rounded hover:bg-primaryHover">
-          Login
-        </button>
-      </form>
+          <button className="w-full bg-primary text-white py-2 rounded-md">Login</button>
+        </form>
+
+        <p className="text-center text-gray-600 mt-4">
+          New here? <a href="/register" className="text-primary">Create an account</a>
+        </p>
+      </div>
     </div>
   );
-}
+};
 
 export default Login;
