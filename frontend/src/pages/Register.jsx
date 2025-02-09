@@ -1,9 +1,9 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../AuthContext";
+import { useAuth } from "../context/AuthContext";
 
 function Register() {
-  const { register } = useContext(AuthContext);
+  const { register } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
