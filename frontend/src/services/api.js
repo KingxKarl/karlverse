@@ -1,4 +1,5 @@
-const API_URL = "http://localhost:5000/api";
+const API_URL = import.meta.env.VITE_API_URL;
+export default API_URL;
 
 export const fetchJobs = async () => {
   const response = await fetch(`${API_URL}/jobs`);
@@ -17,7 +18,7 @@ export const addJob = async (jobData) => {
 export const scrapeJobDetails = async (jobUrl) => {
   try {
     console.log("Sending request to backend:", jobUrl);
-    const response = await fetch(`${API_URL}/scrape-job`, {
+    const response = await fetch(`${API_URL}/jobs/scrape-job`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ jobUrl })
