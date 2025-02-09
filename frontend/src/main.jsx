@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Sidebar from "./components/Sidebar";
+import NavBar from "./components/Navbar"
 import Dashboard from "./pages/Dashboard";
 import JobList from "./pages/JobList";
 import JobDetails from "./pages/JobDetails";
@@ -9,14 +9,15 @@ import AddJobManual from "./pages/AddJobManual";
 import JobLinkInput from "./pages/JobLinkInput";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import { AuthProvider } from "./AuthContext";
+import { AuthProvider } from "./context/AuthContext";  // Fixed incorrect path
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <AuthProvider>
-      <Router>
-        <Sidebar />
+    <Router>
+      <AuthProvider>
+
+        <NavBar />  {/* Updated to NavBar */}
         <div className="pt-16">
           <Routes>
             <Route path="/" element={<Dashboard />} />
@@ -28,7 +29,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             <Route path="/register" element={<Register />} />
           </Routes>
         </div>
-      </Router>
-    </AuthProvider>
+      </AuthProvider>
+
+    </Router>
   </React.StrictMode>
 );
