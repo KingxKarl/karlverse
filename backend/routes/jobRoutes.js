@@ -1,3 +1,10 @@
+// Ensure environment variables are loaded
+import dotenv from "dotenv";
+dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` });
+
+// Debugging: Check if OpenAI API Key is loading
+console.log("OPENAI_API_KEY in jobRoutes:", process.env.OPENAI_API_KEY ? "Loaded" : "Missing");
+
 import express from "express";
 import axios from "axios";
 import * as cheerio from "cheerio";
@@ -5,12 +12,12 @@ import OpenAI from "openai";
 import mongoose from "mongoose";
 import Job from "../models/Job.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
+import { chromium } from "playwright";
 
 const router = express.Router();
 
 // Initialize OpenAI client with API key from environment
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-console.log("OpenAI API Key:", process.env.OPENAI_API_KEY ? "Loaded" : "MISSING");
 
 // Helper function to add follow-up dates only on Tue/Wed/Thu
 const addFollowUpDate = (startDate, daysAhead) => {
@@ -28,12 +35,28 @@ router.use(authMiddleware);
 
 // POST /api/jobs/scrape-job - Scrape job posting, generate details via AI, and save job
 router.post("/scrape-job", async (req, res) => {
+
   const { jobUrl } = req.body;
   console.log("Received job URL:", jobUrl);
+
+  if (!jobUrl || typeof jobUrl !== "string" || !jobUrl.trim()) {
+    return res.status(400).json({ error: "Invalid job URL" });
+  }
+
   try {
-    const { data } = await axios.get(jobUrl, { headers: { "User-Agent": "Mozilla/5.0" } });
+    const browser = await chromium.launch({ headless: true });
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    await page.goto(jobUrl, { waitUntil: "networkidle" });
+    const data = await page.content(); // Get the complete HTML content after rendering
+    await browser.close();
+
+
     const $ = cheerio.load(data);
     const rawText = $("body").text().replace(/\s+/g, " ").trim();
+    
+    // Log the first 500 characters of rawText for debugging
+    console.log("Extracted raw text (first 500 chars):", rawText.substring(0, 500));
 
     // Get AI response for structured job details
     const response = await openai.chat.completions.create({
@@ -46,7 +69,7 @@ router.post("/scrape-job", async (req, res) => {
         },
         {
           role: "user",
-          content: `Extract structured job details from the following job posting. 
+          content: `Extract structured job details from the following job posting. Extract the job title and all information exactly as it appears in the posting; do not return any default or cached value.
 Get as much information as possible. 
 Get salary as a number or range in USD. 
 For the job description, responsibilities, and qualifications get them exactly as they are in the raw data and make sure no raw html is left over. Add spacing and paragraphs for readability. 
