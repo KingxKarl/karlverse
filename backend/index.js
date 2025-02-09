@@ -1,6 +1,6 @@
 // Load environment variables FIRST before anything else
 import dotenv from "dotenv";
-const ENV = process.env.NODE_ENV || "development"; // Default to development
+const ENV = process.env.NODE_ENV; // Default to development
 dotenv.config({ path: `.env.${ENV}` });
 
 // Debugging logs
@@ -22,7 +22,7 @@ const PORT = process.env.PORT || 5000;
 const allowedOrigins = process.env.ALLOWED_ORIGINS
 ? process.env.ALLOWED_ORIGINS.split(",") // Comma-separated list in .env files
 : [
-    "http://localhost:5173", // Dev frontend fallback
+     // Dev frontend fallback
     "https://karlverse-bfdbcsbge7f5e6bh.eastus2-01.azurewebsites.net" // Production frontend fallback
   ];
 
@@ -34,9 +34,7 @@ app.use(cors({
 app.use(express.json());
 
 // MongoDB Connection (Use local DB in dev, Azure in production)
-const mongoURI = ENV === "development"
-    ? "mongodb://localhost:27017/karlverse-dev" // Local MongoDB for development
-    : process.env.MONGO_URI; // Production CosmosDB
+const mongoURI = process.env.MONGO_URI; // Production CosmosDB
 
 mongoose
   .connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
