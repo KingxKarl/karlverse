@@ -1,6 +1,6 @@
 // Ensure environment variables are loaded
 import dotenv from "dotenv";
-dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` });
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 // Debugging: Check if OpenAI API Key is loading
 console.log("OPENAI_API_KEY in jobRoutes:", process.env.OPENAI_API_KEY ? "Loaded" : "Missing");
