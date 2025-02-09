@@ -1,7 +1,8 @@
 // /frontend/src/context/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from "react";
-import jwt_decode from "jwt-decode"; // To decode the JWT on the client
+import { jwtDecode } from "jwt-decode"; // Corrected import
 import { useNavigate } from "react-router-dom";
+import API_URL from "../config"; // Import API URL from config.js
 
 // Create the AuthContext
 const AuthContext = createContext();
@@ -16,8 +17,8 @@ export function AuthProvider({ children }) {
     if (token) {
       try {
         // Decode token to get user information and verify expiration.
-        const decoded = jwt_decode(token);
-        // (Optionally) check if token is expired:
+        const decoded = jwtDecode(token);
+        // Check if token is expired:
         if (decoded.exp * 1000 < Date.now()) {
           localStorage.removeItem("token");
           return { token: null, user: null };
@@ -32,25 +33,21 @@ export function AuthProvider({ children }) {
     return { token: null, user: null };
   });
 
-  // Function to log in: sends email/password to backend,
-  // saves the token to localStorage and updates state.
+  // Function to log in
   const login = async (email, password) => {
     try {
-      const response = await fetch(
-        "https://your-backend-url/auth/login",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password })
-        }
-      );
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
       const data = await response.json();
       if (!response.ok) {
         return { success: false, message: data.message || "Login failed" };
       }
       // Save the token in localStorage
       localStorage.setItem("token", data.token);
-      setAuth({ token: data.token, user: data.user });
+      setAuth({ token: data.token, user: jwtDecode(data.token) });
       return { success: true };
     } catch (error) {
       console.error("Login error:", error);
@@ -58,23 +55,20 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Function to register a new user. (For brevity, similar to login.)
+  // Function to register a new user
   const register = async (email, password, name) => {
     try {
-      const response = await fetch(
-        "https://your-backend-url/auth/register",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, name })
-        }
-      );
+      const response = await fetch(`${API_URL}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, name }),
+      });
       const data = await response.json();
       if (!response.ok) {
         return { success: false, message: data.message || "Registration failed" };
       }
       localStorage.setItem("token", data.token);
-      setAuth({ token: data.token, user: data.user });
+      setAuth({ token: data.token, user: jwtDecode(data.token) });
       return { success: true };
     } catch (error) {
       console.error("Registration error:", error);
@@ -82,27 +76,23 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Function to log out: removes the token and resets auth state.
+  // Function to log out
   const logout = () => {
     localStorage.removeItem("token");
     setAuth({ token: null, user: null });
     navigate("/login");
   };
 
-  // Optionally, set up an effect to auto‑log out when the token expires.
+  // Automatically log out when the token expires
   useEffect(() => {
     if (auth.token) {
-      const decoded = jwt_decode(auth.token);
+      const decoded = jwtDecode(auth.token);
       const expiresAt = decoded.exp * 1000;
       const timeout = expiresAt - Date.now();
-      // If token is already expired, log out immediately.
       if (timeout <= 0) {
         logout();
       } else {
-        const timer = setTimeout(() => {
-          logout();
-        }, timeout);
-        // Cleanup on unmount or if token changes.
+        const timer = setTimeout(logout, timeout);
         return () => clearTimeout(timer);
       }
     }
