@@ -100,7 +100,7 @@ Create a \`.env\` file in the backend directory with the following variables:
 
 \`\`\`env
 PORT=8080
-COSMOSDB_CONNECTION_STRING=your_cosmosdb_connection_string
+MONGO_URI=your_cosmosdb_connection_string
 JWT_SECRET=your_jwt_secret
 OPENAI_API_KEY=your_openai_api_key
 \`\`\`
