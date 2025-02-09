@@ -1,176 +1,163 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { FaCalendarAlt, FaClipboardList, FaExclamationTriangle, FaFire } from "react-icons/fa";
+import { useAuth } from "../context/AuthContext";
 
-function Dashboard() {
+const Dashboard = () => {
+  const { auth } = useAuth();
   const [jobs, setJobs] = useState([]);
-  const [jobUrl, setJobUrl] = useState("");
-  const [isAdding, setIsAdding] = useState(false);
-  const [totalJobs, setTotalJobs] = useState(0);
-  const [appliedJobs, setAppliedJobs] = useState(0);
-  const [interviewingJobs, setInterviewingJobs] = useState(0);
-  const [offersReceived, setOffersReceived] = useState(0);
-  const [followUps, setFollowUps] = useState(0);
-  const [applicationStreak, setApplicationStreak] = useState(0);
-  const [weeklyGoal, setWeeklyGoal] = useState(10);
-  const [weeklyApplications, setWeeklyApplications] = useState(0);
+  const [filteredJobs, setFilteredJobs] = useState([]);
+  const [activeTab, setActiveTab] = useState("all");
+  const [jobLink, setJobLink] = useState("");
 
   useEffect(() => {
-    fetchDashboardData();
+    const fetchJobs = async () => {
+      try {
+        const token = auth.token;
+        if (!token) {
+          console.warn("No auth token available; skipping fetch.");
+          return;
+        }
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/jobs`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setJobs(Array.isArray(data.jobs) ? data.jobs : []);
+      } catch (error) {
+        console.error("Error fetching jobs:", error);
+        setJobs([]);
+      }
+    };
+
+    fetchJobs();
   }, []);
 
   useEffect(() => {
-    calculateDashboardMetrics(jobs);
-  }, [jobs]);
-
-  const fetchDashboardData = () => {
-    fetch("https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/jobs")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.jobs && Array.isArray(data.jobs)) {
-          setJobs(data.jobs);
-        } else {
-          console.error("Unexpected API response format:", data);
-          setJobs([]);
-        }
-        calculateDashboardMetrics(data.jobs);
-      })
-      .catch((err) => {
-        console.error("Error fetching dashboard data:", err);
-        setJobs([]);
-      });
-  };
-
-  const calculateDashboardMetrics = (jobs) => {
-    setTotalJobs(jobs.length);
-    setAppliedJobs(jobs.filter((job) => job.status === "Applied").length);
-    setInterviewingJobs(jobs.filter((job) => job.status === "Interviewing").length);
-    setOffersReceived(jobs.filter((job) => job.status === "Job Offer").length);
-    setFollowUps(jobs.filter(
-      (job) =>
-        job.status === "Applied" &&
-        job.followUpDates &&
-        Object.values(job.followUpDates).some((date) => new Date(date) <= new Date())
-    ).length);
-    
-    // Calculate application streak
-    const appliedDates = jobs
-      .filter((job) => job.dateApplied)
-      .map((job) => job.dateApplied.split("T")[0])
-      .sort((a, b) => new Date(b) - new Date(a));
-
-    let streak = 0;
-    for (let i = 0; i < appliedDates.length; i++) {
-      const streakDate = new Date();
-      streakDate.setDate(streakDate.getDate() - i);
-      if (appliedDates.includes(streakDate.toISOString().split("T")[0])) {
-        streak++;
-      } else {
-        break;
-      }
+    if (activeTab === "applied") {
+      setFilteredJobs(jobs.filter((job) => job.status === "Applied"));
+    } else if (activeTab === "saved") {
+      setFilteredJobs(jobs.filter((job) => job.status === "Saved"));
+    } else {
+      setFilteredJobs(jobs);
     }
-    setApplicationStreak(streak);
+  }, [activeTab, jobs]);
 
-    const weekStart = new Date();
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-    setWeeklyApplications(jobs.filter((job) => job.dateApplied && new Date(job.dateApplied) >= weekStart).length);
-  };
-
-  const handleAddJob = async () => {
-    if (!jobUrl.trim()) return;
-    setIsAdding(true);
+  const handleJobLinkSubmit = async () => {
+    if (!jobLink.trim()) return;
 
     try {
-      const response = await fetch("https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/jobs/scrape-job", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobUrl })
-      });
-      const data = await response.json();
-      if (data.success) {
-        setJobs((prevJobs) => [...prevJobs, data.job]);
+      const token = auth.token;
+      if (!token) {
+        console.error("No auth token found; user may not be logged in.");
+        return;
       }
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/jobs/scrape-job`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ jobUrl: jobLink }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to add job");
+      }
+
+      const newJobResponse = await response.json(); // newJobResponse is { success: true, job: { ... } }
+      const newJob = newJobResponse.job; // Extract the actual job object
+      setJobs((prevJobs) => [...prevJobs, newJob]); // Append it to the existing jobs state
+      setJobLink("");
     } catch (error) {
       console.error("Error adding job:", error);
-    } finally {
-      setIsAdding(false);
-      setJobUrl("");
     }
   };
 
-  const needToApplyJobs = jobs.filter((job) => job.status === "Need to Apply");
-  const recentlyAddedJobs = [...jobs].sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded)).slice(0, 5);
-  const followUpJobs = jobs.filter(
-    (job) =>
-      job.status === "Applied" &&
-      job.followUpDates &&
-      Object.values(job.followUpDates).some((date) => new Date(date) <= new Date())
-  );
-
   return (
-    <div className="min-h-screen bg-backgroundLight dark:bg-backgroundDark p-8 pt-20 transition-all">
-      <div className="max-w-6xl mx-auto bg-white dark:bg-gray-800 shadow-md rounded-md p-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-primary dark:text-highlight mb-4">Dashboard</h1>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Paste Job Posting URL..."
-              value={jobUrl}
-              onChange={(e) => setJobUrl(e.target.value)}
-              className="flex-grow p-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:text-white"
-            />
-            <button
-              onClick={handleAddJob}
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
-            >
-              {isAdding ? "Adding Job..." : "Add Job"}
-            </button>
-          </div>
+    <div className="container mx-auto p-6">
+      {/* Job Hunt Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-card p-4 rounded-md shadow-md text-center">
+          <h3 className="text-lg font-semibold">Total Jobs Added</h3>
+          <p className="text-2xl font-bold text-[#4FD1C5]">{jobs.length}</p>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-          <div className="p-4 bg-gray-200 dark:bg-gray-700 rounded-md">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Total Jobs</h3>
-            <p className="text-xl font-bold text-primary dark:text-highlight">{totalJobs}</p>
-          </div>
-          <div className="p-4 bg-yellow-200 dark:bg-yellow-700 rounded-md">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Applied</h3>
-            <p className="text-xl font-bold">{appliedJobs}</p>
-          </div>
-          <div className="p-4 bg-green-200 dark:bg-green-700 rounded-md">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Offers</h3>
-            <p className="text-xl font-bold">{offersReceived}</p>
-          </div>
-          <div className="p-4 bg-red-200 dark:bg-red-700 rounded-md">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Follow-Ups</h3>
-            <p className="text-xl font-bold">{followUps}</p>
-          </div>
-          <div className="p-4 bg-orange-200 dark:bg-orange-700 rounded-md flex items-center">
-            <FaFire className="text-orange-500 text-2xl mr-2" />
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Application Streak</h3>
-              <p className="text-xl font-bold">{applicationStreak} Days</p>
+        <div className="bg-card p-4 rounded-md shadow-md text-center">
+          <h3 className="text-lg font-semibold">Jobs Applied</h3>
+          <p className="text-2xl font-bold text-[#4FD1C5]">{jobs.filter((job) => job.status === "Applied").length}</p>
+        </div>
+        <div className="bg-card p-4 rounded-md shadow-md text-center">
+          <h3 className="text-lg font-semibold">Job Offers</h3>
+          <p className="text-2xl font-bold text-[#4FD1C5]">{jobs.filter((job) => job.status === "Offer").length}</p>
+        </div>
+      </div>
+
+      {/* Job Input Section */}
+      <div className="p-4 rounded-md shadow-md mb-6">
+        <h3 className="font-semibold text-lg mb-2">Add a Job Posting</h3>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Paste job posting link..."
+            value={jobLink}
+            onChange={(e) => setJobLink(e.target.value)}
+            className="w-full p-2 border rounded-md"
+          />
+          <button
+            onClick={handleJobLinkSubmit}
+            className="bg-[#4FD1C5] text-white px-4 py-2 rounded-md hover:bg-[#38B2AC]"
+          >
+            Add Job
+          </button>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex space-x-4 border-b pb-2">
+        {["all", "applied", "saved"].map((tab) => (
+          <button
+            key={tab}
+            className={`pb-2 ${activeTab === tab ? "border-b-2 border-[#4FD1C5] text-[#4FD1C5]" : "text-gray-500"}`}
+            onClick={() => setActiveTab(tab)}
+          >
+            {tab.charAt(0).toUpperCase() + tab.slice(1)} Jobs
+          </button>
+        ))}
+      </div>
+
+      {/* Job Listings */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+        {filteredJobs.length > 0 ? (
+          filteredJobs.map((job) => (
+            // Use job._id as the unique key and as the identifier in the Link
+            <div key={job._id} className="bg-card p-4 rounded-md shadow-md">
+              {/* Use job.jobTitle instead of job.title */}
+              <h3 className="font-bold text-lg">{job.jobTitle}</h3>
+              <p className="text-gray-600">
+                {job.companyName} {job.location ? `• ${job.location}` : ""}
+              </p>
+              <p className="text-sm text-gray-500">
+                {job.description ? `${job.description.slice(0, 100)}...` : "No description available."}
+              </p>
+              {/* Use job._id in the URL so that it matches the key and unique identifier */}
+              <Link to={`/jobs/${job._id}`} className="block mt-3 text-[#4FD1C5] hover:underline">
+                View Details →
+              </Link>
             </div>
-          </div>
-        </div>
-        <div className="mb-6 bg-gray-100 dark:bg-gray-700 p-4 rounded-md">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-            <FaExclamationTriangle className="mr-2 text-gray-700 dark:text-gray-400" /> Recently Added
-          </h2>
-          <ul className="mt-2 text-gray-800 dark:text-gray-300">
-            {recentlyAddedJobs.map((job) => (
-              <li key={job._id} className="flex justify-between border-b border-gray-300 py-2">
-                <Link to={`/jobs/${job._id}`} className="text-blue-500 hover:underline">
-                  {job.jobTitle} @ {job.companyName}
-                </Link>
-                <span>{new Date(job.dateAdded).toLocaleDateString()}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+          ))
+        ) : (
+          <p className="text-gray-500 text-center col-span-full">No jobs found.</p>
+        )}
       </div>
     </div>
   );
-}
+};
 
 export default Dashboard;
