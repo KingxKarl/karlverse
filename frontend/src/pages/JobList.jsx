@@ -19,7 +19,7 @@ function JobList() {
   const [sortOrder, setSortOrder] = useState("desc");
 
   useEffect(() => {
-    fetch("https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/jobs")
+    fetch(`${API_URL}/jobs`)
       .then((res) => res.json())
       .then((data) => {
         setJobs(data.jobs);
