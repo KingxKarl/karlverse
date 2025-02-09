@@ -4,6 +4,7 @@ import * as cheerio from "cheerio";
 import OpenAI from "openai";
 import mongoose from "mongoose";
 import Job from "../models/Job.js";
+import { authMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -15,7 +16,6 @@ console.log("OpenAI API Key:", process.env.OPENAI_API_KEY ? "Loaded" : "MISSING"
 const addFollowUpDate = (startDate, daysAhead) => {
   let date = new Date(startDate);
   date.setDate(date.getDate() + daysAhead);
-
   // Ensure the date falls on Tuesday (2), Wednesday (3), or Thursday (4)
   while (![2, 3, 4].includes(date.getDay())) {
     date.setDate(date.getDate() + 1);
@@ -23,13 +23,13 @@ const addFollowUpDate = (startDate, daysAhead) => {
   return date.toISOString();
 };
 
-// POST /scrape-job
-// This route scrapes a job posting, sends the raw text to the AI for structured data,
-// processes the response, and saves the new job to the database.
+// Apply auth middleware to all routes
+router.use(authMiddleware);
+
+// POST /api/jobs/scrape-job - Scrape job posting, generate details via AI, and save job
 router.post("/scrape-job", async (req, res) => {
   const { jobUrl } = req.body;
   console.log("Received job URL:", jobUrl);
-
   try {
     const { data } = await axios.get(jobUrl, { headers: { "User-Agent": "Mozilla/5.0" } });
     const $ = cheerio.load(data);
@@ -47,13 +47,13 @@ router.post("/scrape-job", async (req, res) => {
         {
           role: "user",
           content: `Extract structured job details from the following job posting. 
-              Get as much information as possible. 
-              Get salary as a number or range in USD. 
-              For the job description, responsibilities, and qualifications get them exactly as they are in the raw data and make sure no raw html is left over. Add spacing and paragraphs for readability. 
-              The AI generated summary of the job should tell the user what the company is looking for in that role as far as experience or qualifications, and what they can expect from the role. As well as what the tech stack is if it is mentioned in the description or any skills, tech stack and skills should be in skills. Skills are different than qualifications or certifications and could be something the AI thinks is a skill based on the context of the job description:
+Get as much information as possible. 
+Get salary as a number or range in USD. 
+For the job description, responsibilities, and qualifications get them exactly as they are in the raw data and make sure no raw html is left over. Add spacing and paragraphs for readability. 
+The AI generated summary of the job should tell the user what the company is looking for in that role as far as experience or qualifications, and what they can expect from the role. As well as what the tech stack is if it is mentioned in the description or any skills, tech stack and skills should be in skills. Skills are different than qualifications or certifications and could be something the AI thinks is a skill based on the context of the job posting:
           
 ${rawText}
-
+          
 Return a JSON object with these fields:
 {
   "jobTitle": "Job Title Here",
@@ -87,9 +87,11 @@ VERY IMPORTANT: ONLY return a valid JSON object formatted above. Do NOT include 
       return res.status(500).json({ error: "Failed to process AI-generated job details." });
     }
 
+    // Create a new job and associate it with the authenticated user (req.user.id)
     const newJob = new Job({
       jobUrl,
-      ...extractedData
+      ...extractedData,
+      user: req.user.id
     });
 
     await newJob.save();
@@ -101,11 +103,12 @@ VERY IMPORTANT: ONLY return a valid JSON object formatted above. Do NOT include 
   }
 });
 
-// GET /job-metrics
-// Returns metrics calculated from all jobs in the database.
+// GET /api/jobs/job-metrics - Returns calculated metrics from jobs (only for current user unless admin)
 router.get("/job-metrics", async (req, res) => {
   try {
-    const jobs = await Job.find();
+    // Use empty query for admin, else only user-owned jobs
+    const query = req.user.role === "admin" ? {} : { user: req.user.id };
+    const jobs = await Job.find(query);
     const statusCounts = jobs.reduce((acc, job) => {
       acc[job.status] = (acc[job.status] || 0) + 1;
       return acc;
@@ -117,9 +120,7 @@ router.get("/job-metrics", async (req, res) => {
       interviews: statusCounts["Interviewing"] || 0,
       jobOffers: statusCounts["Job Offer"] || 0,
       followUps: jobs.filter(
-        job =>
-          job.followUpDates &&
-          Object.values(job.followUpDates).some(date => new Date(date) <= new Date())
+        job => job.followUpDates && Object.values(job.followUpDates).some(date => new Date(date) <= new Date())
       ).length,
       statusCounts
     });
@@ -129,10 +130,11 @@ router.get("/job-metrics", async (req, res) => {
   }
 });
 
-// GET all jobs
+// GET /api/jobs/ - Get all jobs (only those belonging to the user unless admin)
 router.get("/", async (req, res) => {
   try {
-    const jobs = await Job.find();
+    const query = req.user.role === "admin" ? {} : { user: req.user.id };
+    const jobs = await Job.find(query);
     res.json({ success: true, count: jobs.length, jobs });
   } catch (error) {
     console.error("Error getting jobs:", error.message);
@@ -140,7 +142,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET a job by ID (with ObjectId validation)
+// GET /api/jobs/:id - Get a job by ID (with ownership check)
 router.get("/:id", async (req, res) => {
   const { id } = req.params;
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -151,6 +153,10 @@ router.get("/:id", async (req, res) => {
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
+    // If not admin, ensure the job belongs to the user
+    if (req.user.role !== "admin" && String(job.user) !== req.user.id) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
     res.json({ success: true, job });
   } catch (error) {
     console.error("Error retrieving job:", error.message);
@@ -158,17 +164,21 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// DELETE a job by ID
+// DELETE /api/jobs/:id - Delete a job by ID (with ownership check)
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ message: "Invalid job id." });
   }
   try {
-    const job = await Job.findByIdAndDelete(id);
+    const job = await Job.findById(id);
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
+    if (req.user.role !== "admin" && String(job.user) !== req.user.id) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+    await Job.findByIdAndDelete(id);
     res.json({ success: true, message: "Job deleted." });
   } catch (error) {
     console.error("Error deleting job:", error.message);
@@ -176,7 +186,7 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// UPDATE Job Status & Schedule Follow-Ups
+// PATCH /api/jobs/:id/status - Update job status and schedule follow-ups
 router.patch("/:id/status", async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -187,6 +197,9 @@ router.patch("/:id/status", async (req, res) => {
     const job = await Job.findById(id);
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
+    }
+    if (req.user.role !== "admin" && String(job.user) !== req.user.id) {
+      return res.status(403).json({ message: "Unauthorized" });
     }
     if (status === "Applied" && !job.dateApplied) {
       let appliedDate = new Date();
@@ -199,7 +212,6 @@ router.patch("/:id/status", async (req, res) => {
     }
     job.status = status;
     await job.save();
-    console.log("Updated job status:", job);
     res.json({ success: true, updatedJob: job });
   } catch (error) {
     console.error("Error updating job status:", error.message);
@@ -207,7 +219,7 @@ router.patch("/:id/status", async (req, res) => {
   }
 });
 
-// UPDATE job notes
+// PATCH /api/jobs/:id/notes - Update job notes
 router.patch("/:id/notes", async (req, res) => {
   const { id } = req.params;
   const { notes } = req.body;
@@ -219,9 +231,11 @@ router.patch("/:id/notes", async (req, res) => {
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
+    if (req.user.role !== "admin" && String(job.user) !== req.user.id) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
     job.notes = notes;
     await job.save();
-    console.log("Updated job notes:", job);
     res.json({ success: true, notes });
   } catch (error) {
     console.error("Error updating job notes:", error.message);

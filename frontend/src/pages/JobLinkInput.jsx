@@ -11,10 +11,10 @@ function JobLinkInput() {
     setLoading(true);
 
     try {
-      const response = await fetch("https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/scrape-job", {
+      const response = await fetch("https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/jobs/scrape-job", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobUrl }),
+        body: JSON.stringify({ jobUrl })
       });
 
       if (!response.ok) {
@@ -23,9 +23,7 @@ function JobLinkInput() {
 
       const result = await response.json();
       console.log("Job Added:", result.job);
-
-      // Redirect to job list after adding
-      navigate("/job-list");
+      navigate("/jobs");
     } catch (error) {
       alert("Error adding job.");
       console.error("Scraping error:", error.message);
@@ -38,7 +36,6 @@ function JobLinkInput() {
     <div className="min-h-screen bg-backgroundLight dark:bg-backgroundDark p-8 pt-20 transition-all">
       <div className="bg-white dark:bg-gray-800 shadow-md p-6 rounded-md">
         <h1 className="text-3xl font-bold text-primary dark:text-highlight">Paste Job Posting URL</h1>
-        
         <input
           className="w-full p-2 border border-gray-300 rounded-md mt-4"
           type="url"

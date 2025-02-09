@@ -23,13 +23,11 @@ function Dashboard() {
     calculateDashboardMetrics(jobs);
   }, [jobs]);
 
-  // 🔹 Fetch jobs & calculate metrics
   const fetchDashboardData = () => {
     fetch("https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/jobs")
       .then((res) => res.json())
       .then((data) => {
-        console.log("API Response:", data);
-        if (data.jobs && Array.isArray(data.jobs)){
+        if (data.jobs && Array.isArray(data.jobs)) {
           setJobs(data.jobs);
         } else {
           console.error("Unexpected API response format:", data);
@@ -43,20 +41,23 @@ function Dashboard() {
       });
   };
 
-  // 🔹 Function to calculate dashboard metrics dynamically
   const calculateDashboardMetrics = (jobs) => {
     setTotalJobs(jobs.length);
     setAppliedJobs(jobs.filter((job) => job.status === "Applied").length);
     setInterviewingJobs(jobs.filter((job) => job.status === "Interviewing").length);
     setOffersReceived(jobs.filter((job) => job.status === "Job Offer").length);
-    setFollowUps(jobs.filter((job) => job.status === "Applied" && job.followUpDates && Object.values(job.followUpDates).some((date) => new Date(date) <= new Date())).length);
-
-    // 🔥 Application Streak Calculation
-    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    setFollowUps(jobs.filter(
+      (job) =>
+        job.status === "Applied" &&
+        job.followUpDates &&
+        Object.values(job.followUpDates).some((date) => new Date(date) <= new Date())
+    ).length);
+    
+    // Calculate application streak
     const appliedDates = jobs
       .filter((job) => job.dateApplied)
       .map((job) => job.dateApplied.split("T")[0])
-      .sort((a, b) => new Date(b) - new Date(a)); // Sort in descending order
+      .sort((a, b) => new Date(b) - new Date(a));
 
     let streak = 0;
     for (let i = 0; i < appliedDates.length; i++) {
@@ -65,18 +66,16 @@ function Dashboard() {
       if (appliedDates.includes(streakDate.toISOString().split("T")[0])) {
         streak++;
       } else {
-        break; // Streak ends if a day is missing
+        break;
       }
     }
     setApplicationStreak(streak);
 
-    // 🎯 Weekly Goal Calculation
     const weekStart = new Date();
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Start of current week (Sunday)
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
     setWeeklyApplications(jobs.filter((job) => job.dateApplied && new Date(job.dateApplied) >= weekStart).length);
   };
 
-  // 🔹 Handle job addition and refresh UI
   const handleAddJob = async () => {
     if (!jobUrl.trim()) return;
     setIsAdding(true);
@@ -85,9 +84,8 @@ function Dashboard() {
       const response = await fetch("https://karlverse-backend-h4c8csewhye0hzda.eastus2-01.azurewebsites.net/api/jobs/scrape-job", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobUrl }),
+        body: JSON.stringify({ jobUrl })
       });
-
       const data = await response.json();
       if (data.success) {
         setJobs((prevJobs) => [...prevJobs, data.job]);
@@ -100,7 +98,6 @@ function Dashboard() {
     }
   };
 
-  // 🔹 Categorize Jobs
   const needToApplyJobs = jobs.filter((job) => job.status === "Need to Apply");
   const recentlyAddedJobs = [...jobs].sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded)).slice(0, 5);
   const followUpJobs = jobs.filter(
@@ -113,8 +110,6 @@ function Dashboard() {
   return (
     <div className="min-h-screen bg-backgroundLight dark:bg-backgroundDark p-8 pt-20 transition-all">
       <div className="max-w-6xl mx-auto bg-white dark:bg-gray-800 shadow-md rounded-md p-6">
-        
-        {/* 🔹 Job URL Input Section */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-primary dark:text-highlight mb-4">Dashboard</h1>
           <div className="flex gap-2">
@@ -133,8 +128,6 @@ function Dashboard() {
             </button>
           </div>
         </div>
-
-        {/* 🔹 Job Metrics */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
           <div className="p-4 bg-gray-200 dark:bg-gray-700 rounded-md">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Total Jobs</h3>
@@ -160,8 +153,6 @@ function Dashboard() {
             </div>
           </div>
         </div>
-
-        {/* 🔹 Recently Added Jobs */}
         <div className="mb-6 bg-gray-100 dark:bg-gray-700 p-4 rounded-md">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
             <FaExclamationTriangle className="mr-2 text-gray-700 dark:text-gray-400" /> Recently Added
@@ -177,7 +168,6 @@ function Dashboard() {
             ))}
           </ul>
         </div>
-
       </div>
     </div>
   );

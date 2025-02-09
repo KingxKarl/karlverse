@@ -1,8 +1,9 @@
-import "dotenv/config"; // Only needed for local development
+import "dotenv/config"; // Loads environment variables
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import jobRoutes from "./routes/jobRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -15,43 +16,26 @@ app.use(cors({
 app.use(express.json());
 
 const mongoURI = process.env.COSMOSDB_CONNECTION_STRING;
-const dbName = process.env.COSMOSDB_DATABASE_NAME;
 
 mongoose
-    .connect( mongoURI )
+    .connect(mongoURI)
     .then(() => console.log("Connected to CosmosDB"))
     .catch((err) => console.error("CosmosDB Connection Error:", err));
 
+// Register routes
 app.use("/api/jobs", jobRoutes);
+app.use("/api/auth", authRoutes);
 
-// Function to update application streak
-const updateStreak = () => {
-    const today = new Date().toISOString().split("T")[0];
-    if (lastApplicationDate === today) return; // Already applied today
+// Example endpoint for application streak (if needed)
+let lastApplicationDate = null;
+let applicationStreak = 0;
+let weeklyApplications = 0;
+const weeklyGoal = 10;
 
-    if (lastApplicationDate) {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayString = yesterday.toISOString().split("T")[0];
-
-        if (lastApplicationDate === yesterdayString) {
-            applicationStreak += 1; // Continue streak
-        } else {
-            applicationStreak = 1; // Reset streak
-        }
-    } else {
-        applicationStreak = 1;
-    }
-
-    lastApplicationDate = today;
-    weeklyApplications += 1;
-};
-
-// Get application streak & weekly goals
 app.get("/api/streak-goals", (req, res) => {
     res.json({ streak: applicationStreak, applicationsThisWeek: weeklyApplications, goal: weeklyGoal });
 });
 
 app.listen(PORT, () => {
-    console.log("Backend running on http://localhost:5000");
+    console.log("Backend running on http://localhost:" + PORT);
 });

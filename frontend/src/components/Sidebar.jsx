@@ -1,23 +1,22 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Link } from "react-router-dom";
 import DarkModeToggle from "./DarkModeToggle";
+import { AuthContext } from "../AuthContext";
 
 function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
+  const { auth, logout } = useContext(AuthContext);
 
   return (
     <>
-      {/* Fixed Header with Hamburger Menu & "HiredSoon" Title */}
+      {/* Fixed Header with Hamburger Menu & Title */}
       <div className="fixed top-0 left-0 w-full flex items-center bg-backgroundLight dark:bg-backgroundDark p-4 shadow-md z-50">
-        {/* Hamburger Button */}
         <button
           className="mr-4 p-2 bg-gray-800 text-white rounded-md shadow-lg dark:bg-gray-300 dark:text-black"
           onClick={() => setIsOpen(!isOpen)}
         >
           ☰
         </button>
-
-        {/* "HiredSoon" Title - Acts as a Link to Dashboard */}
         <Link
           to="/"
           className="text-2xl font-bold text-primary dark:text-highlight hover:opacity-80"
@@ -34,7 +33,6 @@ function Sidebar() {
         } transition-transform duration-300 ease-in-out z-40`}
       >
         <div className="p-6 relative">
-          {/* Close Button */}
           <button
             className="absolute top-4 right-4 text-gray-600 dark:text-white"
             onClick={() => setIsOpen(false)}
@@ -65,6 +63,34 @@ function Sidebar() {
             >
               Add Job
             </Link>
+            {auth.token ? (
+              <button
+                onClick={() => {
+                  logout();
+                  setIsOpen(false);
+                }}
+                className="block text-gray-700 dark:text-white hover:text-primary"
+              >
+                Logout
+              </button>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="block text-gray-700 dark:text-white hover:text-primary"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="block text-gray-700 dark:text-white hover:text-primary"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Register
+                </Link>
+              </>
+            )}
           </nav>
 
           {/* Dark Mode Toggle */}
