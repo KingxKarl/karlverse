@@ -1,17 +1,17 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: "class", // Enables dark mode switching
+  // We continue using the "class" strategy—but now the default styles are dark.
+  darkMode: "class",
   content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
       colors: {
-        primary: "#0077b6",  // Blue 
-        backgroundDark: "#0a0f1e",  // Deep Navy
-        backgroundLight: "#ffffff", // White
-        textDark: "#e0e0e0",  // Light Gray
-        textLight: "#333333",  // Dark Gray
-        highlight: "#c0c0c0",  // Silver
-        secondary: "#4b4b4b",  // Dark Gray
+        // Use feng shui colors for career and success:
+        primary: "#D4AF37",   // Rich gold for accents, buttons, links, etc.
+        secondary: "#0D3B66", // Deep blue for secondary elements if needed
+        background: "#0A0F1E",// Deep dark blue/black for the overall background
+        text: "#FFFFFF",      // White text for contrast
+        card: "#1C1C1C",      // Dark neutral for panels and cards
       },
     },
   },
