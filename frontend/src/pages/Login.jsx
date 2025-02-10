@@ -5,17 +5,23 @@ import { useNavigate } from "react-router-dom";
 const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+  // State for email and password inputs
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // New state for storing error messages from login attempts
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = await login(email, password); // Capture the login result
+    // Call the login function from the AuthContext
+    const result = await login(email, password);
     if (result.success) {
-      // On success, redirect the user to the dashboard/homepage ("/")
+      // Clear any previous error messages and redirect to the homepage/dashboard
+      setErrorMessage("");
       navigate("/");
     } else {
-      // Optionally, you can handle login errors here (e.g., display an error message)
+      // Display the error message (e.g., "No account found with that email" or "Incorrect password")
+      setErrorMessage(result.message || "Login failed");
       console.error("Login failed:", result.message);
     }
   };
@@ -32,6 +38,13 @@ const Login = () => {
 
         <div className="border-b my-4"></div>
 
+        {/* Display error message if present */}
+        {errorMessage && (
+          <div className="bg-red-100 text-red-600 p-2 rounded mb-4 text-center">
+            {errorMessage}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
           <input
             type="email"
@@ -47,7 +60,9 @@ const Login = () => {
             onChange={(e) => setPassword(e.target.value)}
             className="w-full px-3 py-2 border rounded-md mb-4"
           />
-          <button className="w-full bg-primary text-white py-2 rounded-md">Login</button>
+          <button className="w-full bg-primary text-white py-2 rounded-md">
+            Login
+          </button>
         </form>
 
         <p className="text-center text-gray-600 mt-4">
