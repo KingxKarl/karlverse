@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import API_URL from "../config";
 
 const Dashboard = () => {
   const { auth } = useAuth();
@@ -17,7 +18,7 @@ const Dashboard = () => {
           console.warn("No auth token available; skipping fetch.");
           return;
         }
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/jobs`, {
+        const response = await fetch(`${API_URL}/jobs`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -59,7 +60,7 @@ const Dashboard = () => {
         console.error("No auth token found; user may not be logged in.");
         return;
       }
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/jobs/scrape-job`, {
+      const response = await fetch(`${API_URL}/jobs/scrape-job`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
