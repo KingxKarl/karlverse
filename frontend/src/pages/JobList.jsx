@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { FaClipboardList, FaPaperPlane, FaComments, FaBriefcase, FaGhost, FaTimes } from "react-icons/fa";
+import API_URL from "../config"
 
 const STATUS_OPTIONS = {
   "Need to Apply": { color: "bg-red-500", icon: <FaClipboardList /> },
