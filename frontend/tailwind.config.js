@@ -1,19 +1,32 @@
-/** @type {import('tailwindcss').Config} */
-export default {
-  // We continue using the "class" strategy—but now the default styles are dark.
-  darkMode: "class",
-  content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
+// tailwind.config.js
+module.exports = {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,jsx,ts,tsx}",
+  ],
   theme: {
     extend: {
       colors: {
-        // Use feng shui colors for career and success:
-        primary: "#D4AF37",   // Rich gold for accents, buttons, links, etc.
-        secondary: "#0D3B66", // Deep blue for secondary elements if needed
-        background: "#0A0F1E",// Deep dark blue/black for the overall background
-        text: "#FFFFFF",      // White text for contrast
-        card: "#1C1C1C",      // Dark neutral for panels and cards
-      },
-    },
+        // Your Custom HiredSoon Color Scheme
+        primary: {
+          DEFAULT: "#4FD1C5", // Main Brand Color
+          light: "#6FE3D9",
+          dark: "#3BB5AA"
+        },
+        secondary: {
+          DEFAULT: "#2D3748", // Text and Backgrounds
+          light: "#4A5568",
+          dark: "#1A202C"
+        },
+        accent: {
+          DEFAULT: "#F6AD55", // Buttons and Highlights
+          light: "#FBD38D",
+          dark: "#DD6B20"
+        },
+        background: "#EDF2F7", // Page Background
+        text: "#1A202C", // Main Text Color
+      }
+    }
   },
   plugins: [],
 };
