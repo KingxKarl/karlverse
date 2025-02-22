@@ -2,12 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Ensure dark mode applies globally */
-html, body {
-  @apply transition-colors duration-300;
-}
-
-.dark {
-  background-color: #0a0f1e; /* Background for dark mode */
-  color: #030000; /* Text color for dark mode */
+/* Custom Global Styles */
+body {
+  background-color: theme("colors.background");
+  color: theme("colors.text");
 }
