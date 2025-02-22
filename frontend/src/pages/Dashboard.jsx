@@ -10,6 +10,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [jobLink, setJobLink] = useState("");
 
+  // Fetch Jobs
   useEffect(() => {
     const fetchJobs = async () => {
       try {
@@ -39,8 +40,9 @@ const Dashboard = () => {
     };
 
     fetchJobs();
-  }, []);
+  }, [auth.token]);
 
+  // Filter Jobs
   useEffect(() => {
     if (activeTab === "applied") {
       setFilteredJobs(jobs.filter((job) => job.status === "Applied"));
@@ -51,6 +53,7 @@ const Dashboard = () => {
     }
   }, [activeTab, jobs]);
 
+  // Add Job via Link
   const handleJobLinkSubmit = async () => {
     if (!jobLink.trim()) return;
 
@@ -73,9 +76,9 @@ const Dashboard = () => {
         throw new Error("Failed to add job");
       }
 
-      const newJobResponse = await response.json(); // newJobResponse is { success: true, job: { ... } }
-      const newJob = newJobResponse.job; // Extract the actual job object
-      setJobs((prevJobs) => [...prevJobs, newJob]); // Append it to the existing jobs state
+      const newJobResponse = await response.json();
+      const newJob = newJobResponse.job;
+      setJobs((prevJobs) => [...prevJobs, newJob]);
       setJobLink("");
     } catch (error) {
       console.error("Error adding job:", error);
@@ -83,25 +86,30 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 space-y-6">
+
       {/* Job Hunt Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-card p-4 rounded-md shadow-md text-center">
-          <h3 className="text-lg font-semibold">Total Jobs Added</h3>
-          <p className="text-2xl font-bold text-[#4FD1C5]">{jobs.length}</p>
+          <h3 className="text-lg font-semibold text-gray-700">Total Jobs Added</h3>
+          <p className="text-2xl font-bold text-primary">{jobs.length}</p>
         </div>
         <div className="bg-card p-4 rounded-md shadow-md text-center">
-          <h3 className="text-lg font-semibold">Jobs Applied</h3>
-          <p className="text-2xl font-bold text-[#4FD1C5]">{jobs.filter((job) => job.status === "Applied").length}</p>
+          <h3 className="text-lg font-semibold text-gray-700">Jobs Applied</h3>
+          <p className="text-2xl font-bold text-primary">{jobs.filter((job) => job.status === "Applied").length}</p>
         </div>
         <div className="bg-card p-4 rounded-md shadow-md text-center">
-          <h3 className="text-lg font-semibold">Job Offers</h3>
-          <p className="text-2xl font-bold text-[#4FD1C5]">{jobs.filter((job) => job.status === "Offer").length}</p>
+          <h3 className="text-lg font-semibold text-gray-700">Job Offers</h3>
+          <p className="text-2xl font-bold text-primary">{jobs.filter((job) => job.status === "Offer").length}</p>
+        </div>
+        <div className="bg-card p-4 rounded-md shadow-md text-center">
+          <h3 className="text-lg font-semibold text-gray-700">Saved Jobs</h3>
+          <p className="text-2xl font-bold text-primary">{jobs.filter((job) => job.status === "Saved").length}</p>
         </div>
       </div>
 
-      {/* Job Input Section */}
-      <div className="p-4 rounded-md shadow-md mb-6">
+      {/* Add Job Section */}
+      <div className="bg-white p-4 rounded-md shadow-md">
         <h3 className="font-semibold text-lg mb-2">Add a Job Posting</h3>
         <div className="flex gap-2">
           <input
@@ -109,11 +117,11 @@ const Dashboard = () => {
             placeholder="Paste job posting link..."
             value={jobLink}
             onChange={(e) => setJobLink(e.target.value)}
-            className="w-full p-2 border rounded-md"
+            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
           />
           <button
             onClick={handleJobLinkSubmit}
-            className="bg-[#4FD1C5] text-white px-4 py-2 rounded-md hover:bg-[#38B2AC]"
+            className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark"
           >
             Add Job
           </button>
@@ -125,7 +133,9 @@ const Dashboard = () => {
         {["all", "applied", "saved"].map((tab) => (
           <button
             key={tab}
-            className={`pb-2 ${activeTab === tab ? "border-b-2 border-[#4FD1C5] text-[#4FD1C5]" : "text-gray-500"}`}
+            className={`pb-2 text-lg ${
+              activeTab === tab ? "border-b-2 border-primary text-primary" : "text-gray-500"
+            }`}
             onClick={() => setActiveTab(tab)}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)} Jobs
@@ -137,9 +147,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
         {filteredJobs.length > 0 ? (
           filteredJobs.map((job) => (
-            // Use job._id as the unique key and as the identifier in the Link
             <div key={job._id} className="bg-card p-4 rounded-md shadow-md">
-              {/* Use job.jobTitle instead of job.title */}
               <h3 className="font-bold text-lg">{job.jobTitle}</h3>
               <p className="text-gray-600">
                 {job.companyName} {job.location ? `• ${job.location}` : ""}
@@ -147,8 +155,7 @@ const Dashboard = () => {
               <p className="text-sm text-gray-500">
                 {job.description ? `${job.description.slice(0, 100)}...` : "No description available."}
               </p>
-              {/* Use job._id in the URL so that it matches the key and unique identifier */}
-              <Link to={`/jobs/${job._id}`} className="block mt-3 text-[#4FD1C5] hover:underline">
+              <Link to={`/jobs/${job._id}`} className="block mt-3 text-primary hover:underline">
                 View Details →
               </Link>
             </div>
