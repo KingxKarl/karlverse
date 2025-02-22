@@ -1,3 +1,4 @@
+// src/components/Navbar.jsx
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -14,9 +15,9 @@ const NavBar = () => {
   };
 
   return (
-    <nav className="bg-[#1A202C] text-white px-6 py-3 flex items-center justify-between shadow-md">
+    <nav className="bg-secondary text-white px-6 py-3 flex items-center justify-between shadow-md">
       {/* Left: Logo */}
-      <Link to="/" className="text-2xl font-bold text-[#4FD1C5]">
+      <Link to="/" className="text-2xl font-bold text-primary">
         HiredSoon
       </Link>
 
@@ -29,33 +30,33 @@ const NavBar = () => {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
-        <button type="submit" className="px-3 py-1 bg-[#4FD1C5] text-white rounded-md">
+        <button type="submit" className="px-3 py-1 bg-primary text-white rounded-md hover:bg-primary-dark">
           Search
         </button>
       </form>
 
       {/* Right: Links & Icons */}
       <div className="flex items-center gap-6">
-        <Link to="/" className="hover:text-[#4FD1C5]">Home</Link>
+        <Link to="/" className="hover:text-primary">Home</Link>
         {auth.token ? (
           <>
-            <Link to="/profile">
-              <User className="w-5 h-5 hover:text-[#4FD1C5]" />
+            <Link to="/profile" className="hover:text-primary">
+              <User className="w-5 h-5" />
             </Link>
-            <button onClick={logout} className="flex items-center gap-1 hover:text-[#4FD1C5]">
+            <button onClick={logout} className="flex items-center gap-1 hover:text-primary">
               <LogOut className="w-5 h-5" />
               Logout
             </button>
           </>
         ) : (
-          <Link to="/login" className="flex items-center gap-1 hover:text-[#4FD1C5]">
+          <Link to="/login" className="flex items-center gap-1 hover:text-primary">
             <LogIn className="w-5 h-5" />
             Login
           </Link>
         )}
         {/* Notification Bell (for follow-up reminders) */}
-        <button className="relative">
-          <Bell className="w-5 h-5 hover:text-[#4FD1C5]" />
+        <button className="relative hover:text-primary">
+          <Bell className="w-5 h-5" />
           {/* Placeholder for future notification count */}
           {/* <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1 rounded-full">1</span> */}
         </button>
