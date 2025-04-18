@@ -31,7 +31,8 @@ const addFollowUpDate = (startDate, daysAhead) => {
 };
 
 // Apply auth middleware to all routes
-router.use(authMiddleware);
+// Temp disable auth
+// router.use(authMiddleware);
 
 // POST /api/jobs/scrape-job - Scrape job posting, generate details via AI, and save job
 router.post("/scrape-job", async (req, res) => {
