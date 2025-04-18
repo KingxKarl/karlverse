@@ -34,10 +34,10 @@ const Dashboard = () => {
 
         const data = await response.json();
         setJobs(Array.isArray(data.jobs) ? data.jobs : []);
-      } catch (error) {
+      /* } catch (error) {
         console.error("Error fetching jobs:", error);
         setJobs([]);
-      }
+      } */
     };
 
     fetchJobs();
