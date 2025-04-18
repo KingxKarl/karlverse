@@ -114,8 +114,8 @@ VERY IMPORTANT: ONLY return a valid JSON object formatted above. Do NOT include 
     // Create a new job and associate it with the authenticated user (req.user.id)
     const newJob = new Job({
       jobUrl,
-      ...extractedData,
-      user: req.user.id
+      ...extractedData
+      //user: req.user.id
     });
 
     await newJob.save();
