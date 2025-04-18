@@ -13,12 +13,13 @@ const Dashboard = () => {
   // Fetch Jobs
   useEffect(() => {
     const fetchJobs = async () => {
-      try {
+      /* try {
         const token = auth.token;
         if (!token) {
           console.warn("No auth token available; skipping fetch.");
           return;
         }
+      */
         const response = await fetch(`${API_URL}/jobs`, {
           method: "GET",
           headers: {
@@ -59,10 +60,12 @@ const Dashboard = () => {
 
     try {
       const token = auth.token;
-      if (!token) {
+     /* if (!token) {
         console.error("No auth token found; user may not be logged in.");
         return;
       }
+
+*/
       const response = await fetch(`${API_URL}/jobs/scrape-job`, {
         method: "POST",
         headers: {
